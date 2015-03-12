@@ -210,6 +210,10 @@ The bad news: everything has a different name. Learning how to parametrize a plo
 - Hadley Wickham for ggplot2 and ggvis
 - Eric Leung for showing us knitR/Sweave
 
+This presentation is available here: http://bit.ly/1FdgaLF
+
+![http://bit.ly/1FdgaLF](qrcode.png)
+
 ## Future Topics?
 
 - Faculty Research Map
