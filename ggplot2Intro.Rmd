@@ -1,0 +1,216 @@
+---
+title: "Intro to ggplot2"
+author: "Ted Laderas"
+date: "March 11, 2015"
+output: slidy_presentation
+---
+
+## Intro to Hadleyland
+
+HW started building solutions to specific R problems as part of his dissertation work, expanding to form an empire within R.
+
+- plyr (How do I apply functions to different data structures?)
+- reshape2 (How can I change/summarize data from one form to another)
+- ggplot2 (How can I make pretty graphics?)
+- dplyr (Common data manipulations on tables)
+- testthat (Unit testing framework for R)
+
+## The Grammar of Graphics
+
+ggplot2 is a graphical plotting package that utilizes a "grammar of graphics":
+
+```{r eval=FALSE, tidy=TRUE}
+ggplot(iris) + geom_point(aes(x=Sepal.Length, y=Sepal.Width)) + theme_minimal()
+```
+
+* Specify data with ggplot()
+* Specify data representation with geoms (layer) 
+    * (bar, line, scatter, heatmap, etc)
+* Specify data mapping with aes() 
+    * (x, y, Color) 
+* Subset data with facets
+* Change the look around with themes
+* Add other properties (titles, etc)
+
+## Simple Example
+```{r fig.height=3}
+library(ggplot2)
+data(iris)
+ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length)) + theme_minimal()
+```
+
+## aes() - the Aesthetic Function
+
+aes() lets you map a variable to a visual property of the geom. Aesthetics can include:
+
+- x or y (almost any geom)
+- size
+- color (point or line)
+- shape (point)
+- linetype (line)
+- fill (rect, bar, histogram)
+
+Documentation for aes() is remarkably terrible, as it's different for each geom. Look at the documentation for each geom for a list of mappable aesthetics.
+
+## Let's get fancier and add coloring
+```{r fig.height=3}
+ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length, color=Species))
+```
+
+## Using a continuous variable
+```{r}
+ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length, color=Petal.Length))
+```
+
+## Other aesthetic attributes: Size
+```{r,warning=FALSE}
+ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length, size=Petal.Length, color=Species))
+```
+
+## Geoms - lots of them
+
+Common geoms to use are below. Each of these requires a different aesthetic mapping.
+
+- geom_point() - scatterplot
+- geom_line() - line
+- geom_bar() - barplot - requires 
+- geom_boxplot() - boxplot
+- geom_tile() - "heatmap"
+- geom_histogram() - histogram
+
+I will try to talk about two or three of them.
+
+## Histograms
+
+```{r ,warning=FALSE}
+ggplot(iris) + geom_histogram(aes(x= Sepal.Width))
+```
+
+## Boxplots
+
+```{r,warning=FALSE}
+ggplot(iris) + geom_boxplot(aes(x=Species, y=Sepal.Width))
+```
+
+## Layering geoms
+
+Where ggplot2 becomes very powerful is that it allows you to layer geoms. Here we're looking at a smoothed version of the data over all coordinates using loess smoothing.
+
+```{r,warning=FALSE}
+ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length)) + 
+  geom_smooth(aes(x= Sepal.Width, y=Sepal.Length))
+```
+
+## Facets - Subsetting the data
+Perhaps we want to visualize the data onto three separate plots (one for each species). 
+We can do this with facets:
+
+```{r,warning=FALSE}
+ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length)) + 
+  facet_grid(facets=Species ~ .)
+```
+
+For rows, we can change the facet_grid() order:
+
+```{r eval=FALSE,warning=FALSE}
+ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length)) + 
+  facet_grid(facets=. ~ Species)
+```
+
+## Theme properties and scaling
+
+The look of everything on the graph can be customized, including
+
+- color scale (continuous or discrete colors)
+- order of elements
+- fonts of everything
+- labels and legends
+
+See ?theme for more information. Also: http://sharpstatistics.co.uk/r/ggplot2-guide/
+
+## Theme properties
+
+The default theme is called theme_grey(). You can see all of the properties of a theme by looking at it.
+
+```{r}
+theme_grey()
+```
+
+## Making a new theme
+
+To customize the theme, you must use elements to fill out the various properties of the theme list. Each of these properties maps to a specific element, either element_text, element_rect, or element_line.
+
+For example, we want a white background and different fonts for the axis titles.
+```{r}
+theme_new <- theme(panel.background = element_rect(fill = "white"), 
+                   axis.title.x = element_text(family = "Times New Roman"),
+                   axis.title.y = element_text(family = "Arial"))
+
+```
+
+## Trying our new theme out
+
+```{r,warning=FALSE}
+ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length)) + theme_new
+```
+
+## Changing a discrete color scale
+
+```{r fig.height=3}
+ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length, color=Species)) +
+  scale_color_manual(values= c("blue", "purple", "gold"))  
+```
+
+## If your data is originally in a matrix like format
+
+For bioinformaticians, we often work with a matrix like format where genes are rows and samples are columns. This "wide" data format is not really usable by ggplot.  
+
+We need to "melt" the data frame to make it easier for ggplot to work with. Our melted data frame will have one data point for row, and additional Gene and Sample Columns.  First we load our data in.
+
+```{r}
+library(reshape2)
+expData <- read.delim("matrix-example.txt")
+expData
+```
+
+## Melting the data into longform data
+
+Then we melt the data using the melt() function:
+
+```{r}
+expDataMelt <- melt(expData, id.vars="Gene")
+expDataMelt
+```
+
+## Making a heatmap with our melted data
+
+```{r}
+ggplot(expDataMelt) + geom_tile(aes(x=variable, y=Gene, fill=value)) + 
+  scale_fill_gradient(low="white", high = "darkgreen")
+```
+
+## Making a line plot with our melted data
+
+Let's plot the expression values as a line plot. To do this we need to tell ggplot2 that we want to plot each line by gene group. Additionaly we want a facet for each gene.
+
+```{r}
+ggplot(expDataMelt) + geom_line(aes(x=variable, y=value, color=Gene, group=Gene)) + 
+  facet_grid(facets= Gene ~.)
+```
+
+## Interactive plots with ggvis
+
+ggplot2 is great for static graphics. But for interactive graphics that allow you to change parameters, you will need to learn ggvis.
+
+The good news: ggvis uses a similar grammar.
+The bad news: everything has a different name. Learning how to parametrize a plot can be tricky.
+
+## Thanks!
+
+- Hadley Wickham for ggplot2 and ggvis
+- Eric Leung for showing us knitR/Sweave
+
+## Future Topics?
+
+- Faculty Research Map
+- OHSU Graduates in the real world
