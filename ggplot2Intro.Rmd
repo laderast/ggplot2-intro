@@ -9,10 +9,9 @@ output: slidy_presentation
 
 Hadley Wickham started building solutions to specific R problems as part of his dissertation work, expanding to form an empire within R.
 
-- plyr (How do I apply functions to different data structures?)
+- plyr/dplyr (How do I apply functions to different data structures?)
 - reshape2 (How can I change/summarize data from one form to another)
 - ggplot2 (How can I make pretty graphics?)
-- dplyr (Common data manipulations on tables)
 - testthat (Unit testing framework for R)
 
 ## The Grammar of Graphics
@@ -33,7 +32,7 @@ ggplot(iris) + geom_point(aes(x=Sepal.Length, y=Sepal.Width)) + theme_minimal()
 * Add other properties (titles, etc)
 
 ## Simple Example
-```{r fig.height=3}
+```{r}
 library(ggplot2)
 data(iris)
 ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length)) + theme_minimal()
@@ -156,7 +155,7 @@ ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length)) + theme_new
 
 ## Changing a discrete color scale
 
-```{r fig.height=3}
+```{r}
 ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length, color=Species)) +
   scale_color_manual(values= c("blue", "purple", "gold"))  
 ```
@@ -197,6 +196,19 @@ Let's plot the expression values as a line plot. To do this we need to tell ggpl
 ggplot(expDataMelt) + geom_line(aes(x=variable, y=value, color=Gene, group=Gene)) + 
   facet_grid(facets= Gene ~.)
 ```
+
+## A More Complex Example
+
+```{r eval =FALSE}
+ggplot(drugmelt[drugmelt$variable == "S6_pS235_S236" & !is.na(drugmelt$Stim) &
+                  drugmelt$Cell == "BT20" & !drugmelt$Drug %in% c("DAS", "MEKi") & 
+                  drugmelt$Time < 720,], aes(Time, value, group=DS, colour=DS)) + 
+	geom_point() + geom_line() + facet_grid(Stim ~ Drug, margin=T) + 
+  scale_x_continuous(breaks = c(30, 120, 480, 720)) + 
+  theme(legend.position = "none", axis.text.x = element_text(angle=90)) 
+```
+
+![S6 example](S6-example.png)
 
 ## Interactive plots with ggvis
 
