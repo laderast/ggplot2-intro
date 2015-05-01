@@ -19,14 +19,16 @@ Hadley Wickham started building solutions to specific R problems as part of his 
 ggplot2 is a graphical plotting package that utilizes a "grammar of graphics":
 
 ```{r eval=FALSE, tidy=TRUE}
-ggplot(iris) + geom_point(aes(x=Sepal.Length, y=Sepal.Width)) + theme_minimal()
+ggplot(iris) + geom_point(aes(x=Sepal.Length, y=Sepal.Width)) 
+
+#+ theme_minimal()
 ```
 
 * Specify data with ggplot()
 * Specify data representation with geoms (layer) 
     * (bar, line, scatter, heatmap, etc)
 * Specify data mapping with aes() 
-    * (x, y, Color) 
+    * (x, y, Color, Size, fill) 
 * Subset data with facets
 * Change the look around with themes
 * Add other properties (titles, etc)
@@ -53,12 +55,13 @@ Documentation for aes() is remarkably terrible, as it's different for each geom.
 
 ## Let's get fancier and add coloring
 ```{r fig.height=3}
-ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length, color=Species))
+ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length, color=Species, size=Petal.Length))
 ```
 
 ## Using a continuous variable
 ```{r}
-ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length, color=Petal.Length))
+ggplot(iris) + geom_point(aes(x= Sepal.Width, y=Sepal.Length, color=Petal.Length)) +
+  scale_color_continuous(low = "white", high = "green")
 ```
 
 ## Other aesthetic attributes: Size
@@ -82,13 +85,13 @@ I will try to talk about two or three of them.
 ## Histograms
 
 ```{r ,warning=FALSE}
-ggplot(iris) + geom_histogram(aes(x= Sepal.Width))
+ggplot(iris) + geom_histogram(aes(x= Sepal.Width, fill=Species, group=Species))
 ```
 
 ## Boxplots
 
 ```{r,warning=FALSE}
-ggplot(iris) + geom_boxplot(aes(x=Species, y=Sepal.Width))
+ggplot(iris) + geom_violin(aes(x=Species, y=Sepal.Width))
 ```
 
 ## Layering geoms
@@ -183,15 +186,37 @@ expData
 Then we melt the data using the melt() function:
 
 ```{r}
-expDataMelt <- melt(expData, id.vars="Gene")
+expDataMelt <- melt(expData, id.vars="Gene", variable.name="Sample",
+                    value.name = "value")
 expDataMelt
 ```
 
 ## Making a heatmap with our melted data
 
 ```{r}
-ggplot(expDataMelt) + geom_tile(aes(x=variable, y=Gene, fill=value)) + 
-  scale_fill_gradient(low="white", high = "darkgreen")
+ggplot(expDataMelt) + geom_tile(aes(x=Sample, y=Gene, fill=value)) + 
+scale_fill_gradient(low="white", high = "darkgreen")
+```
+
+## Using the built in Interface to ColorBrewer
+
+Try different palette numbers here!
+
+```{r}
+ggplot(expDataMelt) + geom_tile(aes(x=Sample, y=Gene, fill=value)) + 
+ scale_fill_distiller(type="div", palette = 2)
+```
+
+## Rotating labels and prettifying
+
+You can change labels using the labs() function and you can also use one theme as a starting point and modify it as you wish.
+
+```{r}
+ggplot(expDataMelt) + geom_tile(aes(x=Sample, y=Gene, fill=value)) + 
+  scale_fill_gradient(low="white", high = "darkgreen") + 
+  labs(x= "Sample Label", fill="Expression") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle=90))
 ```
 
 ## Making a line plot with our melted data
@@ -199,8 +224,7 @@ ggplot(expDataMelt) + geom_tile(aes(x=variable, y=Gene, fill=value)) +
 Let's plot the expression values as a line plot. To do this we need to tell ggplot2 that we want to plot each line by gene group. Additionaly we want a facet for each gene.
 
 ```{r}
-ggplot(expDataMelt) + geom_line(aes(x=variable, y=value, color=Gene, group=Gene)) + 
-  facet_grid(facets= Gene ~.)
+ggplot(expDataMelt) + geom_line(aes(x=Sample, y=value, color=Gene, group=Gene)) +   facet_grid(facets= Gene ~.)
 ```
 
 ## A More Complex Example
